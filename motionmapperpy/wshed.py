@@ -213,11 +213,13 @@ def findWatershedRegions(parameters, minimum_regions=150, startsigma=0.1, pThres
         print('\t Done. %0.02f seconds'%(time.time()-t1))
     else:
         pRest = 1.0
+
+    zVals_wShed_groups = 'zVals_wShed_groups_%s.mat'%minimum_regions
     outdict = {'zValues':zValues, 'zValNames':zValNames, 'zValLens':zValLens, 'sigma':sigma, 'xx':xx,
                'density':density, 'LL':LL, 'watershedRegions':watershedRegions, 'v':ampVels, 'pRest':pRest,
                'wbounds':wbounds}
     hdf5storage.write(data=outdict, path='/', truncate_existing=True,
-                          filename=tsnefolder + 'zVals_wShed_groups.mat', store_python_metadata=False,
+                          filename=tsnefolder + zVals_wShed_groups, store_python_metadata=False,
                           matlab_compatible=True)
     print('\t tempsave done.')
 
@@ -226,9 +228,9 @@ def findWatershedRegions(parameters, minimum_regions=150, startsigma=0.1, pThres
                'density': density, 'LL': LL, 'watershedRegions': watershedRegions, 'v': ampVels, #'pRest': pRest,
                'wbounds': wbounds, 'groups': groups}
     hdf5storage.write(data=outdict, path='/', truncate_existing=True,
-                      filename=tsnefolder + 'zVals_wShed_groups.mat', store_python_metadata=False,
+                      filename=tsnefolder + zVals_wShed_groups, store_python_metadata=False,
                       matlab_compatible=True)
 
-    print('All data saved in %s.'%(tsnefolder.split('/')[-2]+'/zVals_wShed_groups.mat'))
+    print('All data saved in %s.'%(tsnefolder.split('/')[-2]+'/' + zVals_wShed_groups))
 
 
