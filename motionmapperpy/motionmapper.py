@@ -1,3 +1,4 @@
+import imp
 import os, time, glob, shutil
 import multiprocessing as mp
 
@@ -7,6 +8,7 @@ matplotlib.use('Agg')
 import numpy as np
 from scipy.io import savemat, loadmat
 from sklearn.manifold import TSNE
+from sklearn.cluster import MiniBatchKMeans
 import hdf5storage
 from sklearn.neighbors import NearestNeighbors
 from skimage.segmentation import watershed
@@ -20,7 +22,7 @@ from skimage.filters import roberts
 from .wavelet import findWavelets
 from .mmutils import findPointDensity, gencmap
 from .setrunparameters import setRunParameters
-from umap import UMAP
+#from umap import UMAP
 import pickle
 
 """Core t-SNE MotionMapper functions."""
@@ -52,6 +54,11 @@ def run_UMAP(data, parameters, save_model=True):
     n_neighbors, train_negative_sample_rate, min_dist, umap_output_dims, n_training_epochs = parameters['n_neighbors'], \
                                             parameters['train_negative_sample_rate'], parameters['min_dist'], \
                                             parameters['umap_output_dims'], parameters['n_training_epochs']
+
+    if parameters.useGPU>=0:
+        from cuml import UMAP
+    else:
+        from umap import UMAP
 
     um = UMAP(n_neighbors=n_neighbors, negative_sample_rate=train_negative_sample_rate, min_dist=min_dist,
               n_components=umap_output_dims, n_epochs=n_training_epochs)
@@ -365,6 +372,11 @@ def subsampled_tsne_from_projections(parameters,results_directory):
         with h5py.File(tsne_directory + '/training_data.mat', 'r') as hfile:
             trainingSetData = hfile['trainingSetData'][:].T
 
+    # KMeans clustering
+    if parameters.kmeans:
+        print('Running KMeans clustering')
+        kmeans = MiniBatchKMeans(n_clusters=parameters.kmeans, random_state=0).fit(trainingSetData)
+        pickle.dump(kmeans, open(tsne_directory + "/kmeans.pkl", "wb"))
 
     # %% Run t-SNE on training set
     if parameters.method == 'TSNE':
@@ -609,6 +621,11 @@ def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
         data = projections
     data = data / np.sum(data, 1)[:, None]
 
+    clusters = None
+    if parameters.kmeans and parameters.waveletDecomp:
+        kmeans = pickle.load(open(parameters.projectPath + "/" +parameters.method + "/kmeans.pkl", "rb"))
+        clusters = kmeans.predict(data)
+
     print('Finding Embeddings')
     t1 = time.time()
     if parameters.method == 'TSNE':
@@ -643,5 +660,5 @@ def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
     del data
     print('Embeddings found in %0.02f seconds.'%(time.time()-t1))
 
-    return zValues,outputStatistics
+    return zValues,outputStatistics, clusters
 
