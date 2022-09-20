@@ -204,7 +204,9 @@ def findTemplatesFromData(signalData, yData, signalAmps, numPerDataSet, paramete
     return signalData, signalAmps
 
 def mm_findWavelets(projections, numModes, parameters):
-
+    if parameters.normalize_func is not None: 
+        projections = parameters.normalize_func(projections)
+        
     amplitudes, f = findWavelets(projections, numModes, parameters.omega0, parameters.numPeriods,
                                  parameters.samplingFreq, parameters.maxF, parameters.minF, parameters.numProcessors,
                                  parameters.useGPU)

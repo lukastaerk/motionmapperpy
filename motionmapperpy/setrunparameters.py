@@ -96,7 +96,11 @@ def setRunParameters(parameters=None):
     rescale_max = 100
 
     """%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
-
+    if not 'normalize_func' in parameters.keys():
+        parameters.normalize_func = None
+        
+    if not 'kmeans' in parameters.keys():
+        parameters.kmeans = None
 
     if not 'numProcessors' in parameters.keys():
         parameters.numProcessors = numProcessors
