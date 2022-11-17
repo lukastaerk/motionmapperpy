@@ -55,13 +55,11 @@ def run_UMAP(data, parameters, save_model=True):
                                             parameters['train_negative_sample_rate'], parameters['min_dist'], \
                                             parameters['umap_output_dims'], parameters['n_training_epochs']
 
-    if parameters.useGPU>=0:
-        from cuml import UMAP
-    else:
-        from umap import UMAP
 
+    UMAP = parameters.umap_module
+    
     um = UMAP(n_neighbors=n_neighbors, negative_sample_rate=train_negative_sample_rate, min_dist=min_dist,
-              n_components=umap_output_dims, n_epochs=n_training_epochs)
+              n_components=umap_output_dims, n_epochs=n_training_epochs,)
     y = um.fit_transform(data)
     trainmean = np.mean(y, 0)
     scale = (parameters['rescale_max']/np.abs(y).max())

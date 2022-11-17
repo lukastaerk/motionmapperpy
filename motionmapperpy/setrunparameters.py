@@ -1,4 +1,5 @@
 from easydict import EasyDict as edict
+from umap import UMAP
 
 def setRunParameters(parameters=None):
     """
@@ -96,6 +97,9 @@ def setRunParameters(parameters=None):
     rescale_max = 100
 
     """%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
+    if not "umap_method" in parameters:
+        parameters.umap_module = UMAP
+        
     if not 'normalize_func' in parameters.keys():
         parameters.normalize_func = None
         
