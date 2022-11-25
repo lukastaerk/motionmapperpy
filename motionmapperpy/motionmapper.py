@@ -372,12 +372,6 @@ def subsampled_tsne_from_projections(parameters,results_directory):
         with h5py.File(tsne_directory + '/training_data.mat', 'r') as hfile:
             trainingSetData = hfile['trainingSetData'][:].T
 
-    # KMeans clustering
-    if parameters.kmeans:
-        print('Running KMeans clustering')
-        kmeans = MiniBatchKMeans(n_clusters=parameters.kmeans, random_state=0).fit(trainingSetData)
-        pickle.dump(kmeans, open(tsne_directory + "/kmeans.pkl", "wb"))
-
     # %% Run t-SNE on training set
     if parameters.method == 'TSNE':
         if tSNE_method_old  != 'barnes_hut':
@@ -395,6 +389,11 @@ def subsampled_tsne_from_projections(parameters,results_directory):
     hdf5storage.write(data={'trainingEmbedding': trainingEmbedding}, path='/', truncate_existing=True,
                       filename=tsne_directory + '/training_embedding.mat', store_python_metadata=False,
                       matlab_compatible=True)
+
+def set_kmeans_model(k, tsne_directory, trainingSetData):
+    print('Running KMeans clustering')
+    kmeans = MiniBatchKMeans(n_clusters=k, random_state=0).fit(trainingSetData)
+    pickle.dump(kmeans, open(tsne_directory + f"/kmeans_{k}.pkl", "wb"))
 
 
 """Re-Embedding Code"""
@@ -594,7 +593,25 @@ def findTDistributedProjections_fmin(data, trainingData, trainingEmbedding, para
 
     return zValues,zCosts,zGuesses,inConvHull,meanMax,exitFlags
 
+def findClusters(projections, parameters, k=None):
+    if k is None:
+        k = parameters.n_clusters
+    numModes = parameters.pcaModes
+    if parameters.waveletDecomp:
+        print('Finding Wavelets')
+        data, f = mm_findWavelets(projections, numModes, parameters)
+        if parameters.useGPU >= 0:
+            data = data.get()
+    else:
+        print('Using projections for tSNE. No wavelet decomposition.')
+        f = 0
+        data = projections
+        data = data / np.sum(data, 1)[:, None]
 
+    kmeans = pickle.load(open(parameters.projectPath + "/" +parameters.method + f"/kmeans_{k}.pkl", "rb"))
+    clusters = kmeans.predict(data)
+    return clusters
+        
 def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
     """
     findEmbeddings finds the optimal embedding of a data set into a previously
@@ -620,11 +637,6 @@ def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
         f = 0
         data = projections
     data = data / np.sum(data, 1)[:, None]
-
-    clusters = None
-    if parameters.kmeans and parameters.waveletDecomp:
-        kmeans = pickle.load(open(parameters.projectPath + "/" +parameters.method + "/kmeans.pkl", "rb"))
-        clusters = kmeans.predict(data)
 
     print('Finding Embeddings')
     t1 = time.time()
@@ -660,5 +672,5 @@ def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
     del data
     print('Embeddings found in %0.02f seconds.'%(time.time()-t1))
 
-    return zValues,outputStatistics, clusters
+    return zValues,outputStatistics
 

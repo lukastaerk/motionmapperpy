@@ -58,7 +58,7 @@ def main():
 
     parameters.embedding_batchSize = 30000  #% Lower this if you get a memory error when re-embedding points on learned
                                             #% tSNE map.
-    parameters.kmeans = 10                  # this indicates the number of clusters
+    parameters.n_clusters = 10                  # this indicates the number of clusters
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

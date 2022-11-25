@@ -104,7 +104,7 @@ def setRunParameters(parameters=None):
         parameters.normalize_func = None
         
     if not 'kmeans' in parameters.keys():
-        parameters.kmeans = None
+        parameters.n_clusters = None
 
     if not 'numProcessors' in parameters.keys():
         parameters.numProcessors = numProcessors
