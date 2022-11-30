@@ -97,6 +97,8 @@ def setRunParameters(parameters=None):
     rescale_max = 100
 
     """%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
+    if not "kmeans_list" in parameters:
+        parameters.kmeans_list = [10]
     if not "umap_method" in parameters:
         parameters.umap_module = UMAP
         

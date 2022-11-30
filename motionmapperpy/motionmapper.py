@@ -593,9 +593,7 @@ def findTDistributedProjections_fmin(data, trainingData, trainingEmbedding, para
 
     return zValues,zCosts,zGuesses,inConvHull,meanMax,exitFlags
 
-def findClusters(projections, parameters, k=None):
-    if k is None:
-        k = parameters.n_clusters
+def findClusters(projections, parameters):
     numModes = parameters.pcaModes
     if parameters.waveletDecomp:
         print('Finding Wavelets')
@@ -608,9 +606,11 @@ def findClusters(projections, parameters, k=None):
         data = projections
         data = data / np.sum(data, 1)[:, None]
 
-    kmeans = pickle.load(open(parameters.projectPath + "/" +parameters.method + f"/kmeans_{k}.pkl", "rb"))
-    clusters = kmeans.predict(data)
-    return clusters
+    def kmeans(k):
+        return pickle.load(open(parameters.projectPath + "/" +parameters.method + f"/kmeans_{k}.pkl", "rb"))
+
+    clusters_dict = dict([(f"clusters_{k}", kmeans(k).predict(data)) for k in parameters.kmeans_list])
+    return clusters_dict
         
 def findEmbeddings(projections, trainingData, trainingEmbedding, parameters):
     """
