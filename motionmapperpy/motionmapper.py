@@ -6,10 +6,16 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-from scipy.io import savemat, loadmat
+from scipy.io import loadmat
 from sklearn.manifold import TSNE
-#from sklearn.cluster import MiniBatchKMeans
-from cuml import KMeans 
+# import Kmeans as Kmeans depending on whether a GPU is available
+if imp.find_module('cuml'):
+    print('Using GPU Kmeans')
+    from cuml import KMeans
+else:
+    print('Using CPU Kmeans')
+    from sklearn.cluster import MiniBatchKMeans as KMeans
+
 import hdf5storage
 from sklearn.neighbors import NearestNeighbors
 from skimage.segmentation import watershed
@@ -393,6 +399,7 @@ def subsampled_tsne_from_projections(parameters,results_directory):
 
 def set_kmeans_model(k, tsne_directory, trainingSetData):
     print('Running KMeans clustering')
+
     kmeans = KMeans(n_clusters=k, random_state=0).fit(trainingSetData)
     pickle.dump(kmeans, open(tsne_directory + f"/kmeans_{k}.pkl", "wb"))
 
