@@ -1,6 +1,7 @@
 import imp
 import os, time, glob, shutil
 import multiprocessing as mp
+import warnings
 
 import matplotlib
 matplotlib.use('Agg')
@@ -9,12 +10,6 @@ import numpy as np
 from scipy.io import loadmat
 from sklearn.manifold import TSNE
 # import Kmeans as Kmeans depending on whether a GPU is available
-if imp.find_module('cuml'):
-    print('Using GPU Kmeans')
-    from cuml import KMeans
-else:
-    print('Using CPU Kmeans')
-    from sklearn.cluster import MiniBatchKMeans as KMeans
 
 import hdf5storage
 from sklearn.neighbors import NearestNeighbors
@@ -28,8 +23,6 @@ from skimage.filters import roberts
 
 from .wavelet import findWavelets
 from .mmutils import findPointDensity, gencmap
-from .setrunparameters import setRunParameters
-#from umap import UMAP
 import pickle
 
 """Core t-SNE MotionMapper functions."""
@@ -397,7 +390,18 @@ def subsampled_tsne_from_projections(parameters,results_directory):
                       filename=tsne_directory + '/training_embedding.mat', store_python_metadata=False,
                       matlab_compatible=True)
 
-def set_kmeans_model(k, tsne_directory, trainingSetData):
+def set_kmeans_model(k, tsne_directory, trainingSetData, useGPU=-1):
+    if useGPU >= 0:
+        try:
+            from cuml import KMeans
+            print('Using GPU Kmeans')
+        except ModuleNotFoundError as E:
+            warnings.warn("Trying to use GPU but cuml is not installed. Install cuml or set parameters.useGPU = -1. ")
+            raise E
+    else:
+        print('Using CPU Kmeans')
+        from sklearn.cluster import MiniBatchKMeans as KMeans
+    
     print('Running KMeans clustering')
 
     kmeans = KMeans(n_clusters=k, random_state=0).fit(trainingSetData)
